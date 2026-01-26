@@ -1,0 +1,233 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header{
+    background-color: #f7f4f4;
+    height: 10vh;
+    width: 100vw;
+    padding: 25px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: end;
+    gap: 25px;
+}
+
+.top-link{
+    color: gray;
+    font-weight:lighter;
+    text-decoration: none;
+}
+
+.top-link:hover{
+    color: black;
+    text-decoration: underline;
+}
+
+main{
+    width: 100vw;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.google-logo {
+    font-size: 90px;
+    font-weight: bold;
+    letter-spacing: -3px;
+    margin-bottom: 20px;
+    display: inline-block;
+    font-family: 'Product Sans', Arial, sans-serif;
+}
+
+.blue { color: #4285f4; }
+.red { color: #ea4335; }
+.yellow { color: #fbbc05; }
+.green { color: #34a853; }
+
+.search-icon {
+    display: flex;
+    align-items: center;
+    padding-right: 13px;
+    margin-top: -5px;
+}
+
+.search-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: #9aa0a6;
+}
+
+.search-bar input {
+    width: 90%;
+    border: none;
+    outline: none;
+    font-size: 16px;
+}
+
+.bar-wrapper {
+    width: 584px;
+    margin: 0 auto;
+    border: 1px solid #dfe1e5;
+    border-radius: 24px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+}
+
+.bar-wrapper:hover {
+    box-shadow: 0 1px 6px rgba(32,33,36,.28);
+    border-color: rgba(223,225,229,0);
+}
+
+.query-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    height: 100%;
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+    color: rgba(0,0,0,0.87);
+}
+
+.action-buttons {
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding-top: 28px;
+}
+
+.gray-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #f8f9fa;
+    color: #3c4043;
+    padding: 0 16px;
+    margin: 0;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 27px;
+}
+
+.gray-btn:hover {
+    border: 1px solid #dadce0;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    color: #202124;
+}
+
+.advanced-header {
+    background-color: #f1f3f4;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.adv-logo {
+    font-size: 24px;
+    color: #d93025;
+}
+
+.advanced-content {
+    margin: 30px;
+    font-size: 13px;
+}
+
+.header-text {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.row {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.row label {
+    width: 180px;
+    color: #222;
+}
+
+.row input {
+    width: 300px;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+
+.blue-btn {
+    background-color: #4d90fe;
+    color: white;
+    font-weight: bold;
+    border: 1px solid #3079ed;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.form-section {
+    width: 100%;
+    max-width: 600px;
+}
+
+footer {
+    background: #f2f2f2;
+    width: 100%;
+    font-size: 14px;
+    color: #70757a;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-of-footer {
+    padding: 15px 30px;
+    border-bottom: 1px solid #dadce0;
+}
+
+.bottom-of-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.left-side, .right-side {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+footer p {
+    padding: 15px;
+    margin: 0;
+    cursor: pointer;
+}
+
+footer p:hover {
+    text-decoration: underline;
+}
+
+/* Ensure body takes full height to push footer down if using flex column */
+/* Already set in body rule: height: 100vh; display: flex; flex-direction: column; justify-content: space-between; */
