@@ -8,6 +8,9 @@ body {
     padding: 0;
     width: 100vw;
     height: 100vh;
+}
+
+.centered-body {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -104,7 +107,7 @@ main{
     height: 20px;
     width: 20px;
     margin-left: 5px;
-    fill: #9aa0a6; /* Standard google icon color, though svg might define fill */
+    fill: #9aa0a6;
     opacity: 0.6;
 }
 
@@ -143,7 +146,6 @@ main{
 }
 
 .advanced-header {
-    background-color: #f1f3f4;
     padding: 20px;
     display: flex;
     justify-content: space-between;
@@ -158,6 +160,20 @@ main{
 .advanced-content {
     margin: 30px;
     font-size: 13px;
+    margin-left: 35px; 
+}
+
+.advanced-header-title {
+    color: #d93025;
+    font-size: 20px;
+    font-weight: 500;
+    margin: 25px 35px;
+}
+
+.line {
+    height: 1px;
+    background-color: #dfe1e5;
+    margin: 20px 0;
 }
 
 .header-text {
@@ -167,30 +183,42 @@ main{
 }
 
 .row {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     display: flex;
+    flex-direction: row;
     align-items: center;
 }
 
 .row label {
-    width: 180px;
+    width: 200px;
     color: #222;
+    font-size: 13px; 
+}
+.row input {
+    flex-grow: 1;
+    max-width: 350px;
+    padding: 5px 8px;
+    border: 1px solid #d9d9d9;
+    height: 25px;
+    font-size: 13px;
+    border-radius: 1px;
 }
 
-.row input {
-    width: 300px;
-    padding: 5px;
-    border: 1px solid #ccc;
+.row input:focus {
+    outline: none;
+    border: 1px solid #4d90fe;
 }
 
 .blue-btn {
     background-color: #4d90fe;
     color: white;
     font-weight: bold;
-    border: 1px solid #3079ed;
-    padding: 8px 15px;
+    font-size: 11px;
+    padding: 5px 12px; 
     cursor: pointer;
-    border-radius: 2px;
+    border: 1px solid #3079ed; 
+    border-radius: 2px; 
+    min-width: 60px;
 }
 
 .form-section {
