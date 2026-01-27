@@ -13,15 +13,20 @@
     <main>
         
         <div class="google-logo">
-            <span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>
-            <div style="font-size: 20px; color: #666; text-align: right; margin-top: -10px; font-family: sans-serif;">Images</div>
+            <span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span><span class="images-logo">images</span>
         </div>
 
         <form action="https://www.google.com/search">
             <input type="hidden" name="tbm" value="isch">
             
             <div class="search-bar">
+                <img src="svgs/search.svg" class="search-icon" alt="Search">
                 <input type="text" name="q" class="query-input">
+                <img src="svgs/camera.svg" class="camera-icon" alt="Search by image">
+            </div>
+
+            <div class="action-buttons">
+                <input type="submit" value="Google Search" class="gray-btn">
             </div>
 
         </form>
