@@ -38,7 +38,7 @@ def listing_detail(request, pk):
     comments = listing.comments.all().order_by('-timestamp')
     bid_count = listing.bids.count()
 
-    on_watchlist = request.user.is_authenticated and listing in request.user.watchlist.all()
+    on_watchlist = request.user.is_authenticated and request.user.watchlist.filter(pk=listing.pk).exists()
 
     is_winner = (
         not listing.is_active and
@@ -125,7 +125,7 @@ def toggle_watchlist(request, pk):
     if request.method != "POST":
         return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
-    if listing in request.user.watchlist.all():
+    if request.user.watchlist.filter(pk=listing.pk).exists():
         request.user.watchlist.remove(listing)
         messages.info(request, "Removed from watchlist.")
     else:

@@ -1,4 +1,5 @@
 {% extends "auctions/layout.html" %}
+{% load humanize category_tags %}
 
 {% block title %}My Watchlist – Commerce{% endblock %}
 
@@ -29,7 +30,7 @@
                             {% endif %}
                         </h5>
                         {% if listing.category %}
-                            <span class="badge badge-secondary mb-2">{{ listing.category }}</span>
+                            <span class="badge badge-{{ listing.category|category_color }} mb-2">{{ listing.category }}</span>
                         {% endif %}
                         <p class="card-text text-muted flex-grow-1">{{ listing.description|truncatewords:15 }}</p>
                         <div class="mt-auto">
@@ -39,7 +40,7 @@
                                 {% else %}
                                     Final Price:
                                 {% endif %}
-                                <strong>${{ listing.current_price }}</strong>
+                                <strong>${{ listing.current_price|intcomma }}</strong>
                             </p>
                             <a href="{% url 'listing_detail' listing.pk %}" class="btn btn-outline-primary btn-sm btn-block">
                                 View Listing

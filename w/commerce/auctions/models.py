@@ -5,7 +5,6 @@ from django.db import models
 class User(AbstractUser):
     profile_picture = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True)
-    #this is how much the user has in their profile
     watchlist = models.ManyToManyField('Listing', blank=True, related_name='watchers')
 
 

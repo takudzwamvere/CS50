@@ -1,4 +1,5 @@
 {% extends "auctions/layout.html" %}
+{% load category_tags %}
 
 {% block title %}Categories – Commerce{% endblock %}
 
@@ -9,7 +10,7 @@
     <div class="row">
         {% for category in categories %}
             <div class="col-md-3 col-sm-4 col-6 mb-3">
-                <a href="{% url 'category_listings' category %}" class="btn btn-outline-secondary btn-block category-btn">
+                <a href="{% url 'category_listings' category %}" class="btn btn-outline-{{ category|category_color }} btn-block category-btn">
                     {{ category }}
                 </a>
             </div>

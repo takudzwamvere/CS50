@@ -1,10 +1,11 @@
 {% extends "auctions/layout.html" %}
+{% load humanize category_tags %}
 
 {% block title %}{{ category }} – Commerce{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>{{ category }}</h2>
+    <h2><span class="badge badge-{{ category|category_color }}">{{ category }}</span></h2>
     <a href="{% url 'categories' %}" class="btn btn-secondary btn-sm">← All Categories</a>
 </div>
 
@@ -27,7 +28,7 @@
                         <p class="card-text text-muted flex-grow-1">{{ listing.description|truncatewords:20 }}</p>
                         <div class="mt-auto">
                             <p class="current-price mb-2">
-                                Current Price: <strong>${{ listing.current_price }}</strong>
+                                Current Price: <strong>${{ listing.current_price|intcomma }}</strong>
                             </p>
                             <a href="{% url 'listing_detail' listing.pk %}" class="btn btn-outline-primary btn-sm btn-block">
                                 View Listing
