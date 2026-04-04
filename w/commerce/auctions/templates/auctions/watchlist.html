@@ -1,20 +1,17 @@
 {% extends "auctions/layout.html" %}
 
-{% block title %}Active Listings – Commerce{% endblock %}
+{% block title %}My Watchlist – Commerce{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Active Listings</h2>
-    {% if user.is_authenticated %}
-        <a href="{% url 'create_listing' %}" class="btn btn-primary">+ Create Listing</a>
-    {% endif %}
+    <h2>★ My Watchlist</h2>
 </div>
 
 {% if listings %}
     <div class="row">
         {% for listing in listings %}
             <div class="col-md-4 mb-4">
-                <div class="card listing-card h-100 shadow-sm">
+                <div class="card listing-card h-100 shadow-sm {% if not listing.is_active %}border-secondary{% endif %}">
                     {% if listing.image_url %}
                         <img src="{{ listing.image_url }}" class="card-img-top listing-img" alt="{{ listing.title }}">
                     {% else %}
@@ -23,22 +20,29 @@
                         </div>
                     {% endif %}
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ listing.title }}</h5>
+                        <h5 class="card-title">
+                            {{ listing.title }}
+                            {% if not listing.is_active %}
+                                <span class="badge badge-secondary ml-1">Closed</span>
+                            {% endif %}
+                        </h5>
                         {% if listing.category %}
                             <span class="badge badge-secondary mb-2">{{ listing.category }}</span>
                         {% endif %}
-                        <p class="card-text text-muted flex-grow-1">{{ listing.description|truncatewords:20 }}</p>
+                        <p class="card-text text-muted flex-grow-1">{{ listing.description|truncatewords:15 }}</p>
                         <div class="mt-auto">
                             <p class="current-price mb-2">
-                                Current Price: <strong>${{ listing.current_price }}</strong>
+                                {% if listing.is_active %}
+                                    Current Price:
+                                {% else %}
+                                    Final Price:
+                                {% endif %}
+                                <strong>${{ listing.current_price }}</strong>
                             </p>
                             <a href="{% url 'listing_detail' listing.pk %}" class="btn btn-outline-primary btn-sm btn-block">
                                 View Listing
                             </a>
                         </div>
-                    </div>
-                    <div class="card-footer text-muted small">
-                        Listed by {{ listing.created_by.username }}
                     </div>
                 </div>
             </div>
@@ -46,10 +50,8 @@
     </div>
 {% else %}
     <div class="text-center py-5">
-        <p class="text-muted lead">No active listings at the moment.</p>
-        {% if user.is_authenticated %}
-            <a href="{% url 'create_listing' %}" class="btn btn-primary">Be the first to create one!</a>
-        {% endif %}
+        <p class="text-muted lead">Your watchlist is empty.</p>
+        <a href="{% url 'index' %}" class="btn btn-primary">Browse Active Listings</a>
     </div>
 {% endif %}
 {% endblock %}

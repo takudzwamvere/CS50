@@ -1,25 +1,223 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.http import HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
+from django.contrib import messages
 
-from .models import User
+from .models import User, Listing, Bid, Comment
+from .forms import ListingForm, BidForm, CommentForm
 
+
+# ─── Active Listings (Default Route) ────────────────────────────────────────
 
 def index(request):
-    return render(request, "auctions/index.html")
+    listings = Listing.objects.filter(is_active=True).order_by('-created_at')
+    return render(request, "auctions/index.html", {"listings": listings})
 
+
+# ─── Create Listing ──────────────────────────────────────────────────────────
+
+@login_required
+def create_listing(request):
+    if request.method == "POST":
+        form = ListingForm(request.POST)
+        if form.is_valid():
+            listing = form.save(commit=False)
+            listing.created_by = request.user
+            listing.current_price = form.cleaned_data['starting_bid']
+            listing.save()
+            messages.success(request, "Listing created successfully!")
+            return HttpResponseRedirect(reverse("listing_detail", args=[listing.pk]))
+        # fall through to re-render form with errors
+    else:
+        form = ListingForm()
+    return render(request, "auctions/create_listing.html", {"form": form})
+
+
+# ─── Listing Detail ──────────────────────────────────────────────────────────
+
+def listing_detail(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+    bid_form = BidForm()
+    comment_form = CommentForm()
+    comments = listing.comments.all().order_by('-timestamp')
+    bid_count = listing.bids.count()
+
+    on_watchlist = (
+        request.user.is_authenticated and
+        listing in request.user.watchlist.all()
+    )
+
+    is_winner = (
+        not listing.is_active and
+        request.user.is_authenticated and
+        listing.winner == request.user
+    )
+
+    return render(request, "auctions/listing.html", {
+        "listing": listing,
+        "bid_form": bid_form,
+        "comment_form": comment_form,
+        "comments": comments,
+        "bid_count": bid_count,
+        "on_watchlist": on_watchlist,
+        "is_winner": is_winner,
+    })
+
+
+# ─── Place Bid ───────────────────────────────────────────────────────────────
+
+@login_required
+def place_bid(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+
+    if request.method != "POST":
+        return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+    if not listing.is_active:
+        messages.error(request, "This auction has already closed.")
+        return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+    form = BidForm(request.POST)
+    if form.is_valid():
+        amount = form.cleaned_data['amount']
+
+        # Validation: must be >= starting bid AND > current price
+        if amount < listing.starting_bid:
+            messages.error(
+                request,
+                f"Bid must be at least the starting bid of ${listing.starting_bid:.2f}."
+            )
+            return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+        if listing.bids.exists() and amount <= listing.current_price:
+            messages.error(
+                request,
+                f"Bid must be greater than the current price of ${listing.current_price:.2f}."
+            )
+            return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+        # Valid bid — save and update current price
+        bid = Bid(listing=listing, user=request.user, amount=amount)
+        bid.save()
+        listing.current_price = amount
+        listing.save()
+        messages.success(request, f"Bid of ${amount:.2f} placed successfully!")
+    else:
+        messages.error(request, "Invalid bid amount.")
+
+    return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+
+# ─── Close Auction ───────────────────────────────────────────────────────────
+
+@login_required
+def close_auction(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+
+    if request.method != "POST":
+        return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+    if request.user != listing.created_by:
+        messages.error(request, "Only the listing creator can close this auction.")
+        return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+    if not listing.is_active:
+        messages.error(request, "This auction is already closed.")
+        return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+    # Determine winner: highest bidder
+    highest_bid = listing.bids.order_by('-amount').first()
+    listing.is_active = False
+    listing.winner = highest_bid.user if highest_bid else None
+    listing.save()
+
+    if listing.winner:
+        messages.success(request, f"Auction closed. Winner: {listing.winner.username}.")
+    else:
+        messages.success(request, "Auction closed with no bids.")
+
+    return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+
+# ─── Watchlist ───────────────────────────────────────────────────────────────
+
+@login_required
+def toggle_watchlist(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+
+    if request.method != "POST":
+        return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+    if listing in request.user.watchlist.all():
+        request.user.watchlist.remove(listing)
+        messages.info(request, "Removed from your watchlist.")
+    else:
+        request.user.watchlist.add(listing)
+        messages.info(request, "Added to your watchlist.")
+
+    return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+
+@login_required
+def watchlist_view(request):
+    listings = request.user.watchlist.all().order_by('-created_at')
+    return render(request, "auctions/watchlist.html", {"listings": listings})
+
+
+# ─── Comments ────────────────────────────────────────────────────────────────
+
+@login_required
+def add_comment(request, pk):
+    listing = get_object_or_404(Listing, pk=pk)
+
+    if request.method != "POST":
+        return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+    form = CommentForm(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.listing = listing
+        comment.user = request.user
+        comment.save()
+        messages.success(request, "Comment added.")
+    else:
+        messages.error(request, "Could not add comment.")
+
+    return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+
+
+# ─── Categories ──────────────────────────────────────────────────────────────
+
+def categories(request):
+    cats = (
+        Listing.objects
+        .filter(is_active=True)
+        .exclude(category='')
+        .values_list('category', flat=True)
+        .distinct()
+        .order_by('category')
+    )
+    return render(request, "auctions/categories.html", {"categories": cats})
+
+
+def category_listings(request, name):
+    listings = Listing.objects.filter(is_active=True, category=name).order_by('-created_at')
+    return render(request, "auctions/category_listings.html", {
+        "listings": listings,
+        "category": name,
+    })
+
+
+# ─── Authentication ──────────────────────────────────────────────────────────
 
 def login_view(request):
     if request.method == "POST":
-
-        # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
         user = authenticate(request, username=username, password=password)
-
-        # Check if authentication successful
         if user is not None:
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
@@ -40,16 +238,12 @@ def register(request):
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
-
-        # Ensure password matches confirmation
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
         if password != confirmation:
             return render(request, "auctions/register.html", {
                 "message": "Passwords must match."
             })
-
-        # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
             user.save()

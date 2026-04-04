@@ -1,13 +1,11 @@
 {% extends "auctions/layout.html" %}
 
-{% block title %}Active Listings – Commerce{% endblock %}
+{% block title %}{{ category }} – Commerce{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Active Listings</h2>
-    {% if user.is_authenticated %}
-        <a href="{% url 'create_listing' %}" class="btn btn-primary">+ Create Listing</a>
-    {% endif %}
+    <h2>{{ category }}</h2>
+    <a href="{% url 'categories' %}" class="btn btn-secondary btn-sm">← All Categories</a>
 </div>
 
 {% if listings %}
@@ -24,9 +22,6 @@
                     {% endif %}
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ listing.title }}</h5>
-                        {% if listing.category %}
-                            <span class="badge badge-secondary mb-2">{{ listing.category }}</span>
-                        {% endif %}
                         <p class="card-text text-muted flex-grow-1">{{ listing.description|truncatewords:20 }}</p>
                         <div class="mt-auto">
                             <p class="current-price mb-2">
@@ -46,10 +41,8 @@
     </div>
 {% else %}
     <div class="text-center py-5">
-        <p class="text-muted lead">No active listings at the moment.</p>
-        {% if user.is_authenticated %}
-            <a href="{% url 'create_listing' %}" class="btn btn-primary">Be the first to create one!</a>
-        {% endif %}
+        <p class="text-muted lead">No active listings in "{{ category }}" right now.</p>
+        <a href="{% url 'index' %}" class="btn btn-primary">Browse All Listings</a>
     </div>
 {% endif %}
 {% endblock %}
