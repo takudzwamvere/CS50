@@ -141,6 +141,26 @@ def watchlist_view(request):
     return render(request, "auctions/watchlist.html", {"listings": listings})
 
 
+def profile_view(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    
+    # gather user's activity
+    listings = profile_user.listings.all().order_by('-created_at')
+    bids = profile_user.bids.all().order_by('-timestamp')
+    comments = profile_user.comments.all().order_by('-timestamp')
+    watchlist = profile_user.watchlist.all()
+    wins = profile_user.won_listings.all().order_by('-created_at')
+    
+    return render(request, "auctions/profile.html", {
+        "profile_user": profile_user,
+        "listings": listings,
+        "bids": bids,
+        "comments": comments,
+        "watchlist": watchlist,
+        "wins": wins
+    })
+
+
 @login_required
 def add_comment(request, pk):
     listing = get_object_or_404(Listing, pk=pk)

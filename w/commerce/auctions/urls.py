@@ -5,10 +5,11 @@ urlpatterns = [
     # Default route – active listings
     path("", views.index, name="index"),
 
-    # Authentication
+    # Authentication & Profile
     path("login", views.login_view, name="login"),
     path("logout", views.logout_view, name="logout"),
     path("register", views.register, name="register"),
+    path("profile/<str:username>/", views.profile_view, name="profile"),
 
     # Listings
     path("create/", views.create_listing, name="create_listing"),

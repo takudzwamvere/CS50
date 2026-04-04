@@ -1,0 +1,177 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}{{ profile_user.username }}'s Profile – Commerce{% endblock %}
+
+{% block body %}
+<div class="row mb-5">
+    <div class="col-md-3 text-center">
+        {% if profile_user.profile_picture %}
+            <img src="{{ profile_user.profile_picture }}" alt="{{ profile_user.username }}" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+        {% else %}
+            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; font-size: 3rem;">
+                {{ profile_user.username|make_list|first|upper }}
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-9">
+        <h2>{{ profile_user.username }}</h2>
+        <p class="text-muted">Joined: {{ profile_user.date_joined|date:"N j, Y" }}</p>
+        {% if profile_user.bio %}
+            <p>{{ profile_user.bio }}</p>
+        {% else %}
+            <p class="text-muted"><em>No bio provided.</em></p>
+        {% endif %}
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="listings-tab" data-toggle="tab" href="#listings" role="tab">Listings ({{ listings|length }})</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="bids-tab" data-toggle="tab" href="#bids" role="tab">Bids ({{ bids|length }})</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="comments-tab" data-toggle="tab" href="#comments" role="tab">Comments ({{ comments|length }})</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="watchlist-tab" data-toggle="tab" href="#watchlist" role="tab">Watchlist ({{ watchlist|length }})</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="wins-tab" data-toggle="tab" href="#wins" role="tab">Wins ({{ wins|length }})</a>
+    </li>
+</ul>
+
+<div class="tab-content" id="profileTabsContent">
+    
+    <!-- Listings Tab -->
+    <div class="tab-pane fade show active" id="listings" role="tabpanel">
+        {% if listings %}
+            <div class="row">
+                {% for listing in listings %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card listing-card h-100 shadow-sm {% if not listing.is_active %}border-secondary{% endif %}">
+                            <div class="card-img-wrapper">
+                                {% if listing.image_url %}
+                                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
+                                {% else %}
+                                    <div class="no-image d-flex align-items-center justify-content-center h-100">
+                                        <span>No Image</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ listing.title }}</h5>
+                                <p>Price: ${{ listing.current_price }}</p>
+                                <a href="{% url 'listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No listings created.</p>
+        {% endif %}
+    </div>
+
+    <!-- Bids Tab -->
+    <div class="tab-pane fade" id="bids" role="tabpanel">
+        {% if bids %}
+            <ul class="list-group">
+                {% for bid in bids %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            Bid <strong>${{ bid.amount }}</strong> on 
+                            <a href="{% url 'listing_detail' bid.listing.pk %}">{{ bid.listing.title }}</a>
+                        </div>
+                        <small class="text-muted">{{ bid.timestamp|date:"N j, Y, P" }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No bids placed.</p>
+        {% endif %}
+    </div>
+
+    <!-- Comments Tab -->
+    <div class="tab-pane fade" id="comments" role="tabpanel">
+        {% if comments %}
+            <div class="list-group">
+                {% for comment in comments %}
+                    <div class="list-group-item flex-column align-items-start">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">On <a href="{% url 'listing_detail' comment.listing.pk %}">{{ comment.listing.title }}</a></h6>
+                            <small>{{ comment.timestamp|date:"N j, Y, P" }}</small>
+                        </div>
+                        <p class="mb-1">{{ comment.content }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No comments posted.</p>
+        {% endif %}
+    </div>
+
+    <!-- Watchlist Tab -->
+    <div class="tab-pane fade" id="watchlist" role="tabpanel">
+        {% if watchlist %}
+            <div class="row">
+                {% for listing in watchlist %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card listing-card h-100 shadow-sm">
+                            <div class="card-img-wrapper">
+                                {% if listing.image_url %}
+                                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
+                                {% else %}
+                                    <div class="no-image d-flex align-items-center justify-content-center h-100">
+                                        <span>No Image</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ listing.title }}</h5>
+                                <p>Price: ${{ listing.current_price }}</p>
+                                <a href="{% url 'listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">Watchlist is empty.</p>
+        {% endif %}
+    </div>
+
+    <!-- Wins Tab -->
+    <div class="tab-pane fade" id="wins" role="tabpanel">
+        {% if wins %}
+            <div class="row">
+                {% for listing in wins %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card listing-card h-100 shadow-sm border-success">
+                            <div class="card-header bg-success text-white">Won!</div>
+                            <div class="card-img-wrapper">
+                                {% if listing.image_url %}
+                                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
+                                {% else %}
+                                    <div class="no-image d-flex align-items-center justify-content-center h-100">
+                                        <span>No Image</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ listing.title }}</h5>
+                                <p>Winning bid: <strong>${{ listing.current_price }}</strong></p>
+                                <a href="{% url 'listing_detail' listing.pk %}" class="btn btn-sm btn-outline-success">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No won auctions yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
