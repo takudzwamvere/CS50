@@ -17,12 +17,11 @@ class Listing(models.Model):
     category = models.CharField(max_length=100, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings')
     is_active = models.BooleanField(default=True)
-    # winner is set when the auction is closed
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_listings')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.title} is listed currently at {self.current_price} and it started at {self.starting_bid}"
+        return self.title
 
 
 class Bid(models.Model):
@@ -32,7 +31,7 @@ class Bid(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} bid ${self.amount} on {self.listing.title}"
+        return self.user.username + " bid on " + self.listing.title
 
 
 class Comment(models.Model):
@@ -42,4 +41,4 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} on {self.listing.title}"
+        return self.user.username + " commented on " + self.listing.title

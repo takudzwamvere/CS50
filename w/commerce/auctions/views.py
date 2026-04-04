@@ -11,7 +11,8 @@ from .forms import ListingForm, BidForm, CommentForm
 
 
 def index(request):
-    listings = Listing.objects.filter(is_active=True).order_by('-created_at')
+    # get all the active listings
+    listings = Listing.objects.filter(is_active=True)
     return render(request, "auctions/index.html", {"listings": listings})
 
 
@@ -22,12 +23,14 @@ def create_listing(request):
         if form.is_valid():
             listing = form.save(commit=False)
             listing.created_by = request.user
+            # set starting price as current price
             listing.current_price = form.cleaned_data['starting_bid']
             listing.save()
-            messages.success(request, "Listing created successfully!")
+            messages.success(request, "Listing created!")
             return HttpResponseRedirect(reverse("listing_detail", args=[listing.pk]))
     else:
         form = ListingForm()
+
     return render(request, "auctions/create_listing.html", {"form": form})
 
 
@@ -35,16 +38,19 @@ def listing_detail(request, pk):
     listing = get_object_or_404(Listing, pk=pk)
     bid_form = BidForm()
     comment_form = CommentForm()
-    comments = listing.comments.all().order_by('-timestamp')
+    comments = listing.comments.all()
     bid_count = listing.bids.count()
 
-    on_watchlist = request.user.is_authenticated and request.user.watchlist.filter(pk=listing.pk).exists()
+    # check if listing is on users watchlist
+    on_watchlist = False
+    if request.user.is_authenticated:
+        if listing in request.user.watchlist.all():
+            on_watchlist = True
 
-    is_winner = (
-        not listing.is_active and
-        request.user.is_authenticated and
-        listing.winner == request.user
-    )
+    is_winner = False
+    if not listing.is_active and request.user.is_authenticated:
+        if listing.winner == request.user:
+            is_winner = True
 
     return render(request, "auctions/listing.html", {
         "listing": listing,
@@ -64,31 +70,41 @@ def place_bid(request, pk):
     if request.method != "POST":
         return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
+    # make sure auction is still going
     if not listing.is_active:
-        messages.error(request, "This auction has already closed.")
+        messages.error(request, "This auction is already closed.")
         return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
     form = BidForm(request.POST)
     if form.is_valid():
         amount = form.cleaned_data['amount']
 
-        # bid must be at least the starting bid
+        # bid cant be less than starting bid
         if amount < listing.starting_bid:
-            messages.error(request, f"Bid must be at least ${listing.starting_bid}.")
+            messages.error(request, "Bid must be at least $" + str(listing.starting_bid) + ".")
             return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
-        # if there are already bids, new bid must be higher than current price
-        if listing.bids.exists() and amount <= listing.current_price:
-            messages.error(request, f"Bid must be greater than the current price of ${listing.current_price}.")
-            return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
+        # if there are bids already it must be higher than current
+        all_bids = listing.bids.all()
+        if len(all_bids) > 0:
+            if amount <= listing.current_price:
+                messages.error(request, "Bid must be more than the current price of $" + str(listing.current_price) + ".")
+                return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
-        bid = Bid(listing=listing, user=request.user, amount=amount)
+        # save the bid
+        bid = Bid()
+        bid.listing = listing
+        bid.user = request.user
+        bid.amount = amount
         bid.save()
+
         listing.current_price = amount
         listing.save()
-        messages.success(request, f"Bid of ${amount} placed!")
+
+        messages.success(request, "Your bid of $" + str(amount) + " was placed!")
+
     else:
-        messages.error(request, "Invalid bid.")
+        messages.error(request, "Something went wrong with your bid.")
 
     return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
@@ -100,18 +116,27 @@ def close_auction(request, pk):
     if request.method != "POST":
         return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
+    # only the person who made the listing can close it
     if request.user != listing.created_by:
-        messages.error(request, "Only the listing creator can close this auction.")
+        messages.error(request, "You cant close this listing.")
         return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
-    # find the highest bid
-    highest_bid = listing.bids.order_by('-amount').first()
+    # find who bid the most
+    all_bids = listing.bids.all()
+    highest = None
+    for b in all_bids:
+        if highest is None or b.amount > highest.amount:
+            highest = b
+
     listing.is_active = False
-    listing.winner = highest_bid.user if highest_bid else None
+
+    if highest is not None:
+        listing.winner = highest.user
+
     listing.save()
 
     if listing.winner:
-        messages.success(request, f"Auction closed. Winner: {listing.winner.username}.")
+        messages.success(request, "Auction closed! Winner is " + listing.winner.username + ".")
     else:
         messages.success(request, "Auction closed with no bids.")
 
@@ -125,7 +150,8 @@ def toggle_watchlist(request, pk):
     if request.method != "POST":
         return HttpResponseRedirect(reverse("listing_detail", args=[pk]))
 
-    if request.user.watchlist.filter(pk=listing.pk).exists():
+    # check if already on watchlist and toggle it
+    if listing in request.user.watchlist.all():
         request.user.watchlist.remove(listing)
         messages.info(request, "Removed from watchlist.")
     else:
@@ -143,14 +169,13 @@ def watchlist_view(request):
 
 def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
-    
-    # gather user's activity
-    listings = profile_user.listings.all().order_by('-created_at')
-    bids = profile_user.bids.all().order_by('-timestamp')
-    comments = profile_user.comments.all().order_by('-timestamp')
+
+    listings = profile_user.listings.all()
+    bids = profile_user.bids.all()
+    comments = profile_user.comments.all()
     watchlist = profile_user.watchlist.all()
-    wins = profile_user.won_listings.all().order_by('-created_at')
-    
+    wins = profile_user.won_listings.all()
+
     return render(request, "auctions/profile.html", {
         "profile_user": profile_user,
         "listings": listings,
@@ -179,15 +204,16 @@ def add_comment(request, pk):
 
 
 def categories(request):
-    cats = (
-        Listing.objects
-        .filter(is_active=True)
-        .exclude(category='')
-        .values_list('category', flat=True)
-        .distinct()
-        .order_by('category')
-    )
-    return render(request, "auctions/categories.html", {"categories": cats})
+    # get a list of all the different categories being used
+    all_cats = []
+    all_listings = Listing.objects.filter(is_active=True)
+    for listing in all_listings:
+        if listing.category != '' and listing.category not in all_cats:
+            all_cats.append(listing.category)
+
+    all_cats.sort()
+
+    return render(request, "auctions/categories.html", {"categories": all_cats})
 
 
 def category_listings(request, name):
@@ -225,10 +251,13 @@ def register(request):
         email = request.POST["email"]
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
+
+        # make sure passwords match
         if password != confirmation:
             return render(request, "auctions/register.html", {
                 "message": "Passwords must match."
             })
+
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
@@ -236,6 +265,7 @@ def register(request):
             return render(request, "auctions/register.html", {
                 "message": "Username already taken."
             })
+
         login(request, user)
         return HttpResponseRedirect(reverse("index"))
     else:
