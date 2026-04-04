@@ -3,16 +3,10 @@ from django.db import models
 
 
 class User(AbstractUser):
-    # optional profile info
     profile_picture = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True)
-
-    # watchlist stores listings the user is interested in
-    watchlist = models.ManyToManyField(
-        'Listing',
-        blank=True,
-        related_name='watchers'
-    )
+    #this is how much the user has in their profile
+    watchlist = models.ManyToManyField('Listing', blank=True, related_name='watchers')
 
 
 class Listing(models.Model):
@@ -25,17 +19,11 @@ class Listing(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings')
     is_active = models.BooleanField(default=True)
     # winner is set when the auction is closed
-    winner = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='won_listings'
-    )
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_listings')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} is listed currently at {self.current_price} and it started at {self.starting_bid}"
 
 
 class Bid(models.Model):
