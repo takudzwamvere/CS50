@@ -12,7 +12,7 @@ from .forms import ListingForm, BidForm, CommentForm
 
 def index(request):
     # get all the active listings
-    listings = Listing.objects.filter(is_active=True)
+    listings = Listing.objects.filter(is_active=True).order_by('-created_at')
     return render(request, "auctions/index.html", {"listings": listings})
 
 
